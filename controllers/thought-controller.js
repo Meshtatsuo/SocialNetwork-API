@@ -41,7 +41,27 @@ const thoughtController = {
   // create new thought
   createThought({ body }, res) {
     Thought.create(body)
-      .then((dbThoughtData) => res.json(dbThoughtData))
+      .then((dbThoughtData) => {
+        // Add thought id to array on user
+        User.findOneAndUpdate(
+          { username: dbThoughtData.username },
+          { $push: { thoughts: dbThoughtData._id } },
+          { new: true, runValidators: true }
+        )
+          .then((dbUserData) => {
+            if (!dbUserData) {
+              console.log(
+                "Failed to add thought to User's id. No valid id found"
+              );
+            } else {
+              console.log("Added to user!");
+              res.json(dbThoughtData);
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
       .catch((err) => res.status(400).json(err));
   },
 
@@ -99,10 +119,10 @@ const thoughtController = {
   },
 
   // Delete reaction
-  deleteReaction({ params }, res) {
+  deleteReaction({ params, body }, res) {
     Thought.findOneAndUpdate(
       { _id: params.postId },
-      { $pull: { reactions: { reactionId: params.reactionId } } },
+      { $pull: { reactions: { reactionId: body.reactionId } } },
       { new: true }
     )
       .then((dbThoughtData) => res.json(dbThoughtData))

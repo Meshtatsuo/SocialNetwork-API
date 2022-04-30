@@ -72,7 +72,17 @@ const userController = {
       }
       // Goes through the thought array and removes each thought from the database
       dbUserData.thoughts.forEach((thought) => {
-        Thought.findByIdAndDelete(thought);
+        Thought.findByIdAndDelete({ _id: thought })
+          .then((dbThoughtData) => {
+            if (!dbThoughtData) {
+              console.log("No thought found with this id.");
+            } else {
+              console.log("Thought deleted!");
+            }
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       });
     });
 
@@ -92,7 +102,7 @@ const userController = {
 
   addFriend({ params, body }, res) {
     User.findOneAndUpdate(
-      { _id: params.userId },
+      { _id: params.id },
       { $push: { friends: body } },
       { new: true, runValidators: true }
     )
@@ -108,18 +118,19 @@ const userController = {
 
   removeFriend({ params, body }, res) {
     User.findOneAndUpdate(
-      { _id: params.userId },
-      { $pull: { friends: { friendId: params.friendId } } }
+      { _id: params.id },
+      { $pull: { friends: body.friendId } }
     )
       .then((dbUserData) => {
         if (!dbUserData) {
-          res.json(404).json({ message: "No user found with this id!" });
+          res.status(404).json({ message: "No user found with this id." });
           return;
         }
         res.json(dbUserData);
       })
-      .catch((err) => res.json(err));
+      .catch((err) => {
+        res.json(err);
+      });
   },
 };
-
 module.exports = userController;

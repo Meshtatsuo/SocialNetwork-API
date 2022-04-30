@@ -8,6 +8,6 @@ const {
 
 router.route("/:postId").post(createReaction);
 
-router.route("/:postId/:reactionId").delete(deleteReaction);
+router.route("/:postId").delete(deleteReaction);
 
 module.exports = router;
